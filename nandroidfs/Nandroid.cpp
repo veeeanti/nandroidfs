@@ -31,11 +31,17 @@ namespace nandroidfs
 			DokanCloseHandle(instance);
 		}
 
+		{
+			std::lock_guard lock(destroying_mtx);
+			destroying = true;
+		}
+
 		if (connection) {
 			logger.debug("closing socket connection");
 			// Delete the connection immediately
 			// This will cause the agent to exit as it loses connection ...
 			delete connection;
+			connection = nullptr;
 		}
 
 		{
@@ -217,6 +223,10 @@ namespace nandroidfs
 	}
 
 	Connection& Nandroid::get_conn() {
+		std::lock_guard lock(destroying_mtx);
+		if (destroying) {
+			throw std::runtime_error("Attempting to get connection while object is being destroyed");
+		}
 		if (this->connection) {
 			return *this->connection;
 		}
