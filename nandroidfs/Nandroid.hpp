@@ -69,8 +69,5 @@ namespace nandroidfs
 		std::string device_serial;
 		std::wstring wide_device_serial;
 		uint16_t port_num;
-
-		bool destroying = false;
-		std::mutex destroying_mtx;
 	};
 }

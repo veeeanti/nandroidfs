@@ -11,25 +11,23 @@
 #define NAN_FILE_CTX reinterpret_cast<::nandroidfs::FileContext*>(file_info->Context)
 #define NAN_HANDLER_START try {
 
-	#define NAN_HANDLER_END } catch(::nandroidfs::EOFException& ex) { \
-		NAN_LOGGER.warn("device disconnected (EOF), unmounting"); \
-	} catch(::std::exception& ex) { \
-		NAN_LOGGER.error("exception in dokan callback: {} unmounting!", ex.what()); \
-	} catch(...) { \
-		NAN_LOGGER.error("unkown exception in dokan callback - unmounting"); \
-	} \
-	NAN_CTX->unmount(); \
-	return STATUS_UNSUCCESSFUL; \
+	#define NAN_HANDLER_END } catch(::nandroidfs::EOFException&) { \
+    } catch(::std::exception& ex) { \
+        NAN_LOGGER.error("exception in dokan callback: {} unmounting!", ex.what()); \
+    } catch(...) { \
+        NAN_LOGGER.error("unkown exception in dokan callback - unmounting"); \
+    } \
+    NAN_CTX->unmount(); \
+    return STATUS_UNSUCCESSFUL; \
 
-	#define NAN_HANDLER_END_VOID } catch(::nandroidfs::EOFException& ex) { \
-		NAN_LOGGER.warn("device disconnected (EOF), unmounting"); \
-	} catch(::std::exception& ex) { \
-		NAN_LOGGER.error("exception in dokan callback: {} unmounting!", ex.what()); \
-	} catch(...) { \
-		NAN_LOGGER.error("unkown exception in dokan callback - unmounting"); \
-	} \
-	NAN_CTX->unmount(); \
-	return
+	#define NAN_HANDLER_END_VOID return; } catch(::nandroidfs::EOFException&) { \
+    } catch(::std::exception& ex) { \
+        NAN_LOGGER.error("exception in dokan callback: {} unmounting!", ex.what()); \
+    } catch(...) { \
+        NAN_LOGGER.error("unkown exception in dokan callback - unmounting"); \
+    } \
+    NAN_CTX->unmount(); \
+    return
 
 namespace nandroidfs {
     static NTSTATUS handle_create_directory(LPCWSTR path, Connection& conn, DWORD creation_disposition, FileStat stat,

@@ -25,23 +25,18 @@ namespace nandroidfs
 	}
 
 	Nandroid::~Nandroid() {
-		// Stop dokan calls first so that we can safely delete the connection.
 		logger.info("unmounting drive");
-		if (instance) {
-			DokanCloseHandle(instance);
-		}
 
-		{
-			std::lock_guard lock(destroying_mtx);
-			destroying = true;
-		}
-
+		// Delete connection first so no more callbacks can use it
 		if (connection) {
 			logger.debug("closing socket connection");
-			// Delete the connection immediately
-			// This will cause the agent to exit as it loses connection ...
 			delete connection;
 			connection = nullptr;
+		}
+
+		// Now close the dokan handle - any pending callbacks will fail gracefully
+		if (instance) {
+			DokanCloseHandle(instance);
 		}
 
 		{
@@ -223,10 +218,6 @@ namespace nandroidfs
 	}
 
 	Connection& Nandroid::get_conn() {
-		std::lock_guard lock(destroying_mtx);
-		if (destroying) {
-			throw std::runtime_error("Attempting to get connection while object is being destroyed");
-		}
 		if (this->connection) {
 			return *this->connection;
 		}
